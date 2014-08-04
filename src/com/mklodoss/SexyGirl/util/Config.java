@@ -19,7 +19,7 @@ public class Config {
     public static final int MODE = 2;
     public static final String App_Id = "appid";
     public static final String Mode = "mode";
-    public static final String FETCH_IMAGE_URL = URL + "?appid=29560&count=50&type=";
+    public static final String FETCH_IMAGE_URL = URL + "/belle/random?appid=29560&count=50&type=";
 
 
     /**

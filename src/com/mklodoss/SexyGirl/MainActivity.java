@@ -87,6 +87,9 @@ public class MainActivity extends FragmentActivity {
                 List<Category> list = Config.convertCategory(jsonObject);
                 adapter.setList(list);
                 adapter.notifyDataSetChanged();
+                if (savedInstanceState == null) {
+                    selectItem(0);
+                }
             }
         }, new Response.ErrorListener() {
             @Override
@@ -101,9 +104,7 @@ public class MainActivity extends FragmentActivity {
             }
         };
         MainApplication._application.getQueue().add(request);
-        if (savedInstanceState == null) {
-            selectItem(0);
-        }
+
     }
 
     class DrawerAdapter extends BaseAdapter {

@@ -101,7 +101,12 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
                     @Override
                     public void onResponse(JSONObject jsonObject) {
                         List<ImageInfo> list = Config.convertImageInfo(jsonObject);
-                        String
+                        String[] strs = new String[list.size()];
+                        for(int i=0; i<list.size(); i++) {
+                            strs[i] = list.get(i).url;
+                        }
+                        mAdapter.urls = strs;
+                        mAdapter.notifyDataSetChanged();
 
                     }
                 }, new Response.ErrorListener() {

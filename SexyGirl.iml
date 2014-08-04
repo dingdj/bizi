@@ -25,15 +25,6 @@
         <jarDirectory url="file://$MODULE_DIR$/libs" recursive="false" />
       </library>
     </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://D:/360Downloads/adt-bundle-windows-x86-20131030/adt-bundle-windows-x86-20131030/sdk/extras/android/support/v4/android-support-v4.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
   </component>
 </module>
 
