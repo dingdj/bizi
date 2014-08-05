@@ -77,7 +77,7 @@ public class ImageDetailActivity extends FragmentActivity implements OnClickList
         mImageFetcher.setImageFadeIn(false);
 
         // Set up ViewPager and backing adapter
-        mAdapter = new ImagePagerAdapter(getSupportFragmentManager(), Images.imageUrls.length);
+        mAdapter = new ImagePagerAdapter(getSupportFragmentManager(), ImageGridFragment.list.size());
         mPager = (ViewPager) findViewById(R.id.pager);
         mPager.setAdapter(mAdapter);
         mPager.setPageMargin((int) getResources().getDimension(R.dimen.horizontal_page_margin));
@@ -89,11 +89,11 @@ public class ImageDetailActivity extends FragmentActivity implements OnClickList
         // Enable some additional newer visibility and ActionBar features to create a more
         // immersive photo viewing experience
         if (Utils.hasHoneycomb()) {
-            final ActionBar actionBar = getActionBar();
+           /* final ActionBar actionBar = getActionBar();
 
             // Hide title text and set home as up
             actionBar.setDisplayShowTitleEnabled(false);
-            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setDisplayHomeAsUpEnabled(true);*/
 
             // Hide and show the ActionBar as the visibility changes
             mPager.setOnSystemUiVisibilityChangeListener(
@@ -101,16 +101,16 @@ public class ImageDetailActivity extends FragmentActivity implements OnClickList
                         @Override
                         public void onSystemUiVisibilityChange(int vis) {
                             if ((vis & View.SYSTEM_UI_FLAG_LOW_PROFILE) != 0) {
-                                actionBar.hide();
+                                //actionBar.hide();
                             } else {
-                                actionBar.show();
+                                //actionBar.show();
                             }
                         }
                     });
 
             // Start low profile mode and hide ActionBar
             mPager.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE);
-            actionBar.hide();
+            //actionBar.hide();
         }
 
         // Set the current item based on the extra passed in to this activity
@@ -124,6 +124,7 @@ public class ImageDetailActivity extends FragmentActivity implements OnClickList
     public void onResume() {
         super.onResume();
         mImageFetcher.setExitTasksEarly(false);
+
     }
 
     @Override
@@ -187,7 +188,7 @@ public class ImageDetailActivity extends FragmentActivity implements OnClickList
 
         @Override
         public Fragment getItem(int position) {
-            return ImageDetailFragment.newInstance(Images.imageUrls[position]);
+            return ImageDetailFragment.newInstance(ImageGridFragment.list.get(position).url);
         }
     }
 

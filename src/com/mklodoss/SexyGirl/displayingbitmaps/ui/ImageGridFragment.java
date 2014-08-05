@@ -18,12 +18,13 @@ package com.mklodoss.SexyGirl.displayingbitmaps.ui;
 
 import android.annotation.TargetApi;
 import android.app.ActivityOptions;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.media.Image;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.TypedValue;
 import android.view.*;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.*;
@@ -34,19 +35,16 @@ import com.mklodoss.SexyGirl.BuildConfig;
 import com.mklodoss.SexyGirl.MainApplication;
 import com.mklodoss.SexyGirl.R;
 import com.mklodoss.SexyGirl.displayingbitmaps.provider.Images;
-import com.mklodoss.SexyGirl.displayingbitmaps.util.ImageCache;
 import com.mklodoss.SexyGirl.displayingbitmaps.util.ImageFetcher;
 import com.mklodoss.SexyGirl.displayingbitmaps.util.Utils;
 import com.mklodoss.SexyGirl.logger.Log;
-import com.mklodoss.SexyGirl.model.Category;
 import com.mklodoss.SexyGirl.model.ImageInfo;
 import com.mklodoss.SexyGirl.util.Config;
 import com.mklodoss.SexyGirl.volleyex.JsonCookieSupportRequest;
 import org.json.JSONObject;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 
 /**
@@ -58,7 +56,6 @@ import java.util.Map;
  */
 public class ImageGridFragment extends Fragment implements AdapterView.OnItemClickListener {
     private static final String TAG = "ImageGridFragment";
-    private static final String IMAGE_CACHE_DIR = "thumbs";
 
     private int mImageThumbSize;
     private int mImageThumbSpacing;
@@ -66,6 +63,8 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     private ImageFetcher mImageFetcher;
     public static final String ARG_PLANET_NUMBER = "categoty";
     private int category;
+    public static List<ImageInfo> list = new ArrayList<ImageInfo>();
+    private ProgressDialog progressDialog;
 
     /**
      * Empty constructor as per the Fragment documentation
@@ -82,41 +81,42 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 
         mAdapter = new ImageAdapter(getActivity());
 
-        ImageCache.ImageCacheParams cacheParams =
-                new ImageCache.ImageCacheParams(getActivity(), IMAGE_CACHE_DIR);
-
-        cacheParams.setMemCacheSizePercent(0.25f); // Set memory cache to 25% of app memory
-
-        // The ImageFetcher takes care of loading images into our ImageView children asynchronously
-        mImageFetcher = new ImageFetcher(getActivity(), mImageThumbSize);
-        mImageFetcher.setLoadingImage(R.drawable.empty_photo);
-        mImageFetcher.addImageCache(getActivity().getSupportFragmentManager(), cacheParams);
+        mImageFetcher = MainApplication._application.getmImageFetcher();
+        mImageFetcher.addImageCache(getActivity().getSupportFragmentManager(),
+                MainApplication._application.getCacheParams());
 
         //获取分类数据
-        category = 13;//getArguments().getInt(ARG_PLANET_NUMBER);
+        category = getArguments().getInt(ARG_PLANET_NUMBER);
 
         JsonCookieSupportRequest request = new JsonCookieSupportRequest(Request.Method.POST,
                 Config.FETCH_IMAGE_URL+category, null,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject jsonObject) {
-                        List<ImageInfo> list = Config.convertImageInfo(jsonObject);
+                        list = Config.convertImageInfo(jsonObject);
                         String[] strs = new String[list.size()];
                         for(int i=0; i<list.size(); i++) {
                             strs[i] = list.get(i).url;
+                            //android.util.Log.e("12312", strs[i]);
                         }
                         mAdapter.urls = strs;
+                        progressDialog.dismiss();
                         mAdapter.notifyDataSetChanged();
 
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError volleyError) {
+                progressDialog.dismiss();
+                Toast.makeText(ImageGridFragment.this.getActivity(), "网络异常，请稍后重试", Toast.LENGTH_LONG);
                 android.util.Log.e("22", volleyError.toString());
             }
         });
         MainApplication._application.getQueue().add(request);
-
+        progressDialog = new ProgressDialog(getActivity());
+        progressDialog.setMessage(this.getText(R.string.loading));
+        progressDialog.setCancelable(false);
+        progressDialog.show();
     }
 
     @Override
@@ -163,7 +163,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
                                 final int columnWidth =
                                         (mGridView.getWidth() / numColumns) - mImageThumbSpacing;
                                 mAdapter.setNumColumns(numColumns);
-                                mAdapter.setItemHeight(columnWidth);
+                                mAdapter.setItemHeight((int)(columnWidth*1.46));
                                 if (BuildConfig.DEBUG) {
                                     Log.d(TAG, "onCreateView - numColumns set to " + numColumns);
                                 }
@@ -249,7 +249,8 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
         private int mNumColumns = 0;
         private int mActionBarHeight = 0;
         private GridView.LayoutParams mImageViewLayoutParams;
-        public String[] urls = Images.imageThumbUrls;
+//        public String[] urls = Images.imageThumbUrls;
+        public String[] urls = new String[0];
 
         public ImageAdapter(Context context) {
             super();

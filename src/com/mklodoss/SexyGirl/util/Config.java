@@ -14,6 +14,7 @@ import java.util.List;
  */
 public class Config {
 
+    public static final String IMAGE_CACHE_DIR = "thumbs";
     public static final String URL = "http://mmpicture.duapp.com";
     public static final int APPID = 29560;
     public static final int MODE = 2;

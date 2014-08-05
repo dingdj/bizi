@@ -97,8 +97,7 @@ public class ImageCache {
      * @param cacheParams The cache parameters to use if the ImageCache needs instantiation.
      * @return An existing retained ImageCache object or a new one if one did not exist
      */
-    public static ImageCache getInstance(
-            FragmentManager fragmentManager, ImageCacheParams cacheParams) {
+    public static ImageCache getInstance(FragmentManager fragmentManager, ImageCacheParams cacheParams) {
 
         // Search for, or create an instance of the non-UI RetainFragment
         final RetainFragment mRetainFragment = findOrCreateRetainFragment(fragmentManager);
@@ -563,6 +562,14 @@ public class ImageCache {
                 Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()) ||
                         !isExternalStorageRemovable() ? getExternalCacheDir(context).getPath() :
                                 context.getCacheDir().getPath();
+        android.util.Log.e(TAG, cachePath + File.separator + uniqueName);
+
+        try {
+            throw new IllegalAccessException("");
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+
 
         return new File(cachePath + File.separator + uniqueName);
     }

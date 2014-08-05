@@ -79,11 +79,13 @@ public abstract class ImageWorker {
         BitmapDrawable value = null;
 
         if (mImageCache != null) {
+            android.util.Log.e(TAG, "--------------"+String.valueOf(data));
             value = mImageCache.getBitmapFromMemCache(String.valueOf(data));
         }
 
         if (value != null) {
             // Bitmap found in memory cache
+            android.util.Log.e(TAG, "--------------Bitmap found in memory cache");
             imageView.setImageDrawable(value);
         } else if (cancelPotentialWork(data, imageView)) {
             //BEGIN_INCLUDE(execute_background_task)

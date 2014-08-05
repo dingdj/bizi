@@ -1,6 +1,7 @@
 package com.mklodoss.SexyGirl;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -38,6 +39,8 @@ public class MainActivity extends FragmentActivity {
     private ActionBarDrawerToggle mDrawerToggle;
     private CharSequence mDrawerTitle;
     private CharSequence mTitle;
+    List<Category> list = new ArrayList<Category>();
+    private ProgressDialog progressDialog;
 
     /**
      * Called when the activity is first created.
@@ -84,16 +87,19 @@ public class MainActivity extends FragmentActivity {
                 new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject jsonObject) {
-                List<Category> list = Config.convertCategory(jsonObject);
+                list = Config.convertCategory(jsonObject);
                 adapter.setList(list);
                 adapter.notifyDataSetChanged();
                 if (savedInstanceState == null) {
+                    progressDialog.dismiss();
                     selectItem(0);
                 }
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError volleyError) {
+                progressDialog.dismiss();
+                Toast.makeText(MainActivity.this, "网络异常，请稍后重试", Toast.LENGTH_LONG);
                 Log.e("22", volleyError.toString());
             }
         }){
@@ -104,7 +110,10 @@ public class MainActivity extends FragmentActivity {
             }
         };
         MainApplication._application.getQueue().add(request);
-
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setMessage(this.getText(R.string.loading));
+        progressDialog.setCancelable(false);
+        progressDialog.show();
     }
 
     class DrawerAdapter extends BaseAdapter {
@@ -206,16 +215,17 @@ public class MainActivity extends FragmentActivity {
 
         ImageGridFragment imageGridFragment = new ImageGridFragment();
         Bundle args = new Bundle();
-        args.putInt(ImageGridFragment.ARG_PLANET_NUMBER, position);
-        imageGridFragment.setArguments(args);
+        if(list.size() > position) {
+            Category category = list.get(position);
+            args.putInt(ImageGridFragment.ARG_PLANET_NUMBER, category.type);
+            imageGridFragment.setArguments(args);
 
-        final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        ft.replace(R.id.content_frame, imageGridFragment);
-        ft.commit();
-
-
-        // update selected item and title, then close the drawer
-        mDrawerList.setItemChecked(position, true);
+            final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+            ft.replace(R.id.content_frame, imageGridFragment);
+            ft.commit();
+            // update selected item and title, then close the drawer
+            mDrawerList.setItemChecked(position, true);
+        }
         //setTitle(mPlanetTitles[position]);
         mDrawerLayout.closeDrawer(mDrawerList);
     }
