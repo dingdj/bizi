@@ -1,7 +1,7 @@
 package com.mklodoss.SexyGirl.util;
 
-import com.mklodoss.SexyGirl.model.Category;
-import com.mklodoss.SexyGirl.model.ImageInfo;
+import com.mklodoss.SexyGirl.model.LocalBelle;
+import com.mklodoss.SexyGirl.model.Series;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -28,16 +28,17 @@ public class Config {
      * @param jsonObject
      * @return
      */
-    public static List<Category> convertCategory(JSONObject jsonObject) {
-        List<Category> list = new ArrayList<Category>();
+    public static List<Series> convertCategory(JSONObject jsonObject) {
+        List<Series> list = new ArrayList<Series>();
         try {
             JSONArray array = jsonObject.getJSONArray("seriesList");
             for (int i=0; i<array.length(); i++) {
                 JSONObject object = array.getJSONObject(i);
-                Category category = new Category();
-                category.type = object.getInt("type");
-                category.title = object.getString("title");
-                list.add(category);
+                Series series = new Series();
+                series.type = object.getInt("type");
+                series.title = object.getString("title");
+                series.setProperty(1);
+                list.add(series);
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -51,18 +52,19 @@ public class Config {
      * @param jsonObject
      * @return
      */
-    public static List<ImageInfo> convertImageInfo(JSONObject jsonObject) {
-        List<ImageInfo> list = new ArrayList<ImageInfo>();
+    public static List<LocalBelle> convertLocalBelle(JSONObject jsonObject) {
+        List<LocalBelle> list = new ArrayList<LocalBelle>();
         try {
             JSONArray array = jsonObject.getJSONArray("belles");
             for (int i=0; i<array.length(); i++) {
                 JSONObject object = array.getJSONObject(i);
-                ImageInfo imageInfo = new ImageInfo();
-                imageInfo.id = object.getInt("id");
-                imageInfo.time = object.getInt("time");
-                imageInfo.type = object.getInt("type");
-                imageInfo.url = object.getString("url");
-                list.add(imageInfo);
+                LocalBelle localBelle = new LocalBelle();
+                localBelle.id = object.getInt("id");
+                localBelle.time = object.getInt("time");
+                localBelle.type = object.getInt("type");
+                localBelle.url = object.getString("url");
+                localBelle.setRawUrl(AppRuntime.makeRawUrl(localBelle.url));
+                list.add(localBelle);
             }
         } catch (JSONException e) {
             e.printStackTrace();

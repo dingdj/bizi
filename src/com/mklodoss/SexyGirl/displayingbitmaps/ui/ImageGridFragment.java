@@ -21,7 +21,7 @@ import android.app.ActivityOptions;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.media.Image;
+import android.graphics.Bitmap;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -34,13 +34,18 @@ import com.android.volley.VolleyError;
 import com.mklodoss.SexyGirl.BuildConfig;
 import com.mklodoss.SexyGirl.MainApplication;
 import com.mklodoss.SexyGirl.R;
-import com.mklodoss.SexyGirl.displayingbitmaps.provider.Images;
-import com.mklodoss.SexyGirl.displayingbitmaps.util.ImageFetcher;
 import com.mklodoss.SexyGirl.displayingbitmaps.util.Utils;
+import com.mklodoss.SexyGirl.event.SeriesUpdatedEvent;
 import com.mklodoss.SexyGirl.logger.Log;
-import com.mklodoss.SexyGirl.model.ImageInfo;
+import com.mklodoss.SexyGirl.model.LocalBelle;
+import com.mklodoss.SexyGirl.util.BelleHelper;
 import com.mklodoss.SexyGirl.util.Config;
+import com.mklodoss.SexyGirl.util.SeriesHelper;
 import com.mklodoss.SexyGirl.volleyex.JsonCookieSupportRequest;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.assist.FailReason;
+import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
+import de.greenrobot.event.EventBus;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -60,11 +65,12 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     private int mImageThumbSize;
     private int mImageThumbSpacing;
     private ImageAdapter mAdapter;
-    private ImageFetcher mImageFetcher;
+    //private ImageFetcher mImageFetcher;
     public static final String ARG_PLANET_NUMBER = "categoty";
     private int category;
-    public static List<ImageInfo> list = new ArrayList<ImageInfo>();
-    private ProgressDialog progressDialog;
+    public static List<LocalBelle> list = new ArrayList<LocalBelle>();
+    GridView mGridView;
+    LayoutInflater layoutInflater;
 
     /**
      * Empty constructor as per the Fragment documentation
@@ -74,6 +80,8 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        layoutInflater = getLayoutInflater(savedInstanceState);
+        EventBus.getDefault().register(this);
         setHasOptionsMenu(true);
 
         mImageThumbSize = getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
@@ -81,42 +89,14 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 
         mAdapter = new ImageAdapter(getActivity());
 
-        mImageFetcher = MainApplication._application.getmImageFetcher();
+       /* mImageFetcher = MainApplication._application.getmImageFetcher();
         mImageFetcher.addImageCache(getActivity().getSupportFragmentManager(),
-                MainApplication._application.getCacheParams());
+                MainApplication._application.getCacheParams());*/
 
         //获取分类数据
         category = getArguments().getInt(ARG_PLANET_NUMBER);
-
-        JsonCookieSupportRequest request = new JsonCookieSupportRequest(Request.Method.POST,
-                Config.FETCH_IMAGE_URL+category, null,
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject jsonObject) {
-                        list = Config.convertImageInfo(jsonObject);
-                        String[] strs = new String[list.size()];
-                        for(int i=0; i<list.size(); i++) {
-                            strs[i] = list.get(i).url;
-                            //android.util.Log.e("12312", strs[i]);
-                        }
-                        mAdapter.urls = strs;
-                        progressDialog.dismiss();
-                        mAdapter.notifyDataSetChanged();
-
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError volleyError) {
-                progressDialog.dismiss();
-                Toast.makeText(ImageGridFragment.this.getActivity(), "网络异常，请稍后重试", Toast.LENGTH_LONG);
-                android.util.Log.e("22", volleyError.toString());
-            }
-        });
-        MainApplication._application.getQueue().add(request);
-        progressDialog = new ProgressDialog(getActivity());
-        progressDialog.setMessage(this.getText(R.string.loading));
-        progressDialog.setCancelable(false);
-        progressDialog.show();
+        list = BelleHelper.getInstance().getLocaleBell(this.getActivity(), category);
+        adapterNotify(false);
     }
 
     @Override
@@ -124,7 +104,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
             LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         final View v = inflater.inflate(R.layout.image_grid_fragment, container, false);
-        final GridView mGridView = (GridView) v.findViewById(R.id.gridView);
+        mGridView = (GridView) v.findViewById(R.id.gridView);
         mGridView.setAdapter(mAdapter);
         mGridView.setOnItemClickListener(this);
         mGridView.setOnScrollListener(new AbsListView.OnScrollListener() {
@@ -134,10 +114,10 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
                 if (scrollState == AbsListView.OnScrollListener.SCROLL_STATE_FLING) {
                     // Before Honeycomb pause image loading on scroll to help with performance
                     if (!Utils.hasHoneycomb()) {
-                        mImageFetcher.setPauseWork(true);
+                        //mImageFetcher.setPauseWork(true);
                     }
                 } else {
-                    mImageFetcher.setPauseWork(false);
+                    //mImageFetcher.setPauseWork(false);
                 }
             }
 
@@ -185,22 +165,19 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     @Override
     public void onResume() {
         super.onResume();
-        mImageFetcher.setExitTasksEarly(false);
         mAdapter.notifyDataSetChanged();
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        mImageFetcher.setPauseWork(false);
-        mImageFetcher.setExitTasksEarly(true);
-        mImageFetcher.flushCache();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        mImageFetcher.closeCache();
+        EventBus.getDefault().unregister(this);
+        ImageLoader.getInstance().stop();
     }
 
     @TargetApi(VERSION_CODES.JELLY_BEAN)
@@ -319,24 +296,59 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
             }
 
             // Now handle the main ImageView thumbnails
-            ImageView imageView;
+            View view;
+            RecyclingImageView imageView;
+            final ProgressBar progressBar;
             if (convertView == null) { // if it's not recycled, instantiate and initialize
-                imageView = new RecyclingImageView(mContext);
+                view = layoutInflater.inflate(R.layout.thumb_image_view, mGridView, false);
+                imageView = (RecyclingImageView)view.findViewById(R.id.photo);
                 imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                imageView.setLayoutParams(mImageViewLayoutParams);
+                progressBar = (ProgressBar)view.findViewById(R.id.progressBar);
+                ViewHolder holder = new ViewHolder(view);
+                view.setTag(holder);
+                view.setLayoutParams(mImageViewLayoutParams);
             } else { // Otherwise re-use the converted view
-                imageView = (ImageView) convertView;
+                view = convertView;
+                ViewHolder holder = (ViewHolder)convertView.getTag();
+                imageView = holder.photo;
+                progressBar = holder.progressBar;
             }
 
             // Check the height matches our calculated column width
-            if (imageView.getLayoutParams().height != mItemHeight) {
-                imageView.setLayoutParams(mImageViewLayoutParams);
-            }
+            /*if (imageView.getLayoutParams().height != mItemHeight) {
+                imageView.setLayoutParams(new RelativeLayout.LayoutParams(
+                        LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+            }*/
 
+            //imageView.setImageDrawable(getResources().getDrawable(R.drawable.loading));
             // Finally load the image asynchronously into the ImageView, this also takes care of
             // setting a placeholder image while the background thread runs
-            mImageFetcher.loadImage(urls[position - mNumColumns], imageView);
-            return imageView;
+            //mImageFetcher.loadImage(urls[position - mNumColumns], imageView);
+
+            progressBar.setVisibility(View.GONE);
+            ImageLoader.getInstance().displayImage(urls[position - mNumColumns], imageView, new ImageLoadingListener() {
+
+                @Override
+                public void onLoadingStarted(String s, View view) {
+                    progressBar.setVisibility(View.VISIBLE);
+                }
+
+                @Override
+                public void onLoadingFailed(String s, View view, FailReason failReason) {
+                    progressBar.setVisibility(View.GONE);
+                }
+
+                @Override
+                public void onLoadingComplete(String s, View view, Bitmap bitmap) {
+                    progressBar.setVisibility(View.GONE);
+                }
+
+                @Override
+                public void onLoadingCancelled(String s, View view) {
+                    progressBar.setVisibility(View.GONE);
+                }
+            });
+            return view;
             //END_INCLUDE(load_gridview_item)
         }
 
@@ -353,7 +365,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
             mItemHeight = height;
             mImageViewLayoutParams =
                     new GridView.LayoutParams(LayoutParams.MATCH_PARENT, mItemHeight);
-            mImageFetcher.setImageSize(height);
+            //mImageFetcher.setImageSize(height);
             notifyDataSetChanged();
         }
 
@@ -363,6 +375,45 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 
         public int getNumColumns() {
             return mNumColumns;
+        }
+    }
+
+
+    /**
+     * 更新adapter数据
+     */
+    private void adapterNotify(boolean notify) {
+        if(list != null && list.size() > 0) {
+            String[] urls = new String[list.size()];
+            for(int i=0; i<list.size(); i++) {
+                LocalBelle localBelle = list.get(i);
+                urls[i] = localBelle.getUrl();
+            }
+            mAdapter.urls = urls;
+            if(notify) {
+                mAdapter.notifyDataSetChanged();
+            }
+        }
+    }
+
+    /**
+     * 有新的图片同步
+     * @param paramSeriesUpdatedEvent
+     */
+    public void onEventMainThread(SeriesUpdatedEvent paramSeriesUpdatedEvent){
+        list = BelleHelper.getInstance().getLocalBelleList();
+        adapterNotify(true);
+    }
+
+    private static final class ViewHolder
+    {
+        public RecyclingImageView photo;
+        public ProgressBar progressBar;
+
+        public ViewHolder(View paramView)
+        {
+            this.photo = ((RecyclingImageView)paramView.findViewById(R.id.photo));
+            this.progressBar = ((ProgressBar)paramView.findViewById(R.id.progressBar));
         }
     }
 }

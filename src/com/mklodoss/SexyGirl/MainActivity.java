@@ -1,36 +1,31 @@
 package com.mklodoss.SexyGirl;
 
-import android.app.Activity;
-import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.*;
 import android.widget.*;
-import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
+import com.ddj.commonkit.DateUtil;
+import com.mklodoss.SexyGirl.Setting.SettingPreference;
 import com.mklodoss.SexyGirl.displayingbitmaps.ui.ImageGridFragment;
-import com.mklodoss.SexyGirl.model.Category;
-import com.mklodoss.SexyGirl.util.Config;
-import com.mklodoss.SexyGirl.volleyex.JsonCookieSupportRequest;
-import org.json.JSONObject;
+import com.mklodoss.SexyGirl.event.SeriesUpdatedEvent;
+import com.mklodoss.SexyGirl.model.Series;
+import com.mklodoss.SexyGirl.util.SeriesHelper;
+import de.greenrobot.event.EventBus;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class MainActivity extends FragmentActivity {
 
+    private static final long ONEHOUR = 1000 * 60 * 60;
 
     private DrawerLayout mDrawerLayout;
     private ListView mDrawerList;
@@ -39,8 +34,7 @@ public class MainActivity extends FragmentActivity {
     private ActionBarDrawerToggle mDrawerToggle;
     private CharSequence mDrawerTitle;
     private CharSequence mTitle;
-    List<Category> list = new ArrayList<Category>();
-    private ProgressDialog progressDialog;
+    List<Series> list = new ArrayList<Series>();
 
     /**
      * Called when the activity is first created.
@@ -83,42 +77,37 @@ public class MainActivity extends FragmentActivity {
             }
         };
         mDrawerLayout.setDrawerListener(mDrawerToggle);
-        JsonCookieSupportRequest request = new JsonCookieSupportRequest(Request.Method.POST, Config.URL+"/series/list?appid=29560&mode=2", null,
-                new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject jsonObject) {
-                list = Config.convertCategory(jsonObject);
-                adapter.setList(list);
-                adapter.notifyDataSetChanged();
-                if (savedInstanceState == null) {
-                    progressDialog.dismiss();
-                    selectItem(0);
-                }
+        EventBus.getDefault().register(this);
+
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        try {
+            long lastTime = SettingPreference.getInstance().getLauncherOnStartDayTime();
+            long currentTime = DateUtil.getTodayTime();
+            boolean resetDayStatTime = false;
+
+            if (currentTime - lastTime >= ONEHOUR * 24) {
+                resetDayStatTime = true;
+                //同步开始
+                SeriesHelper.getInstance().syncSeries(this);
             }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError volleyError) {
-                progressDialog.dismiss();
-                Toast.makeText(MainActivity.this, "网络异常，请稍后重试", Toast.LENGTH_LONG);
-                Log.e("22", volleyError.toString());
+
+            if (resetDayStatTime) {
+                SettingPreference.getInstance().setLauncherOnStartDayTime(currentTime);
             }
-        }){
-            @Override
-            protected Map<String, String> getParams() {
-                Map<String, String> paramMap = new HashMap<String, String>();
-                return paramMap;
-            }
-        };
-        MainApplication._application.getQueue().add(request);
-        progressDialog = new ProgressDialog(this);
-        progressDialog.setMessage(this.getText(R.string.loading));
-        progressDialog.setCancelable(false);
-        progressDialog.show();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        list = SeriesHelper.getInstance().getSeriesList();
+        adapter.setList(list);
     }
 
     class DrawerAdapter extends BaseAdapter {
 
-        private List<Category> list = new ArrayList<Category>();
+        private List<Series> list = new ArrayList<Series>();
 
         @Override
         public int getCount() {
@@ -137,21 +126,20 @@ public class MainActivity extends FragmentActivity {
 
         @Override
         public View getView(int i, View view, ViewGroup viewGroup) {
-            TextView textView = (TextView)layoutInflater.inflate(R.layout.drawer_list_item, null);
+            TextView textView = (TextView) layoutInflater.inflate(R.layout.drawer_list_item, null);
             textView.setTag(list.get(i));
             textView.setText(list.get(i).title);
             return textView;
         }
 
-        public List<Category> getList() {
+        public List<Series> getList() {
             return list;
         }
 
-        public void setList(List<Category> list) {
+        public void setList(List<Series> list) {
             this.list = list;
         }
     }
-
 
 
     @Override
@@ -178,7 +166,7 @@ public class MainActivity extends FragmentActivity {
             return true;
         }
         // Handle action buttons
-        switch(item.getItemId()) {
+        switch (item.getItemId()) {
             case R.id.action_websearch:
                 // create intent to perform web search for this planet
                 Intent intent = new Intent(Intent.ACTION_WEB_SEARCH);
@@ -205,19 +193,11 @@ public class MainActivity extends FragmentActivity {
 
     private void selectItem(int position) {
         // update the main content by replacing fragments
-        /*Fragment fragment = new PlanetFragment();
-        Bundle args = new Bundle();
-        args.putInt(PlanetFragment.ARG_PLANET_NUMBER, position);
-        fragment.setArguments(args);
-
-        FragmentManager fragmentManager = getFragmentManager();
-        fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).commit();*/
-
         ImageGridFragment imageGridFragment = new ImageGridFragment();
         Bundle args = new Bundle();
-        if(list.size() > position) {
-            Category category = list.get(position);
-            args.putInt(ImageGridFragment.ARG_PLANET_NUMBER, category.type);
+        if (list.size() > position) {
+            Series series = list.get(position);
+            args.putInt(ImageGridFragment.ARG_PLANET_NUMBER, series.type);
             imageGridFragment.setArguments(args);
 
             final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
@@ -280,5 +260,20 @@ public class MainActivity extends FragmentActivity {
         }
     }*/
 
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+        EventBus.getDefault().unregister(this);
+    }
 
+    /**
+     * 有新的目录同步
+     * @param paramSeriesUpdatedEvent
+     */
+    public void onEventMainThread(SeriesUpdatedEvent paramSeriesUpdatedEvent){
+        Log.e("ddj", "---------------------onEventMainThread");
+        list = SeriesHelper.getInstance().getSeriesList();
+        adapter.setList(list);
+        adapter.notifyDataSetChanged();
+    }
 }
