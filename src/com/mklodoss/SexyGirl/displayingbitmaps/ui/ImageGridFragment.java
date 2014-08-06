@@ -18,35 +18,27 @@ package com.mklodoss.SexyGirl.displayingbitmaps.ui;
 
 import android.annotation.TargetApi;
 import android.app.ActivityOptions;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.*;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.*;
-import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.mklodoss.SexyGirl.BuildConfig;
-import com.mklodoss.SexyGirl.MainApplication;
 import com.mklodoss.SexyGirl.R;
 import com.mklodoss.SexyGirl.displayingbitmaps.util.Utils;
 import com.mklodoss.SexyGirl.event.SeriesUpdatedEvent;
 import com.mklodoss.SexyGirl.logger.Log;
 import com.mklodoss.SexyGirl.model.LocalBelle;
 import com.mklodoss.SexyGirl.util.BelleHelper;
-import com.mklodoss.SexyGirl.util.Config;
-import com.mklodoss.SexyGirl.util.SeriesHelper;
-import com.mklodoss.SexyGirl.volleyex.JsonCookieSupportRequest;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 import de.greenrobot.event.EventBus;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -82,7 +74,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
         super.onCreate(savedInstanceState);
         layoutInflater = getLayoutInflater(savedInstanceState);
         EventBus.getDefault().register(this);
-        setHasOptionsMenu(true);
+        setHasOptionsMenu(false);
 
         mImageThumbSize = getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
         mImageThumbSpacing = getResources().getDimensionPixelSize(R.dimen.image_thumbnail_spacing);
@@ -106,6 +98,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
         final View v = inflater.inflate(R.layout.image_grid_fragment, container, false);
         mGridView = (GridView) v.findViewById(R.id.gridView);
         mGridView.setAdapter(mAdapter);
+        mGridView.setBackgroundColor(Color.GRAY);
         mGridView.setOnItemClickListener(this);
         mGridView.setOnScrollListener(new AbsListView.OnScrollListener() {
             @Override
@@ -199,18 +192,17 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.main, menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            /*case R.id.clear_cache:
+        /*switch (item.getItemId()) {
+            case R.id.clear_cache:
                 mImageFetcher.clearCache();
                 Toast.makeText(getActivity(), R.string.clear_cache_complete_toast,
                         Toast.LENGTH_SHORT).show();
-                return true;*/
-        }
+                return true;
+        }*/
         return super.onOptionsItemSelected(item);
     }
 

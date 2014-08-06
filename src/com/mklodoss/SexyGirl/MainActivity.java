@@ -47,6 +47,8 @@ public class MainActivity extends FragmentActivity {
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerList = (ListView) findViewById(R.id.left_drawer);
 
+        mTitle = getResources().getString(R.string.app_name);
+
         adapter = new DrawerAdapter();
         mDrawerList.setAdapter(adapter);
         // set a custom shadow that overlays the main content when the drawer opens
@@ -67,7 +69,7 @@ public class MainActivity extends FragmentActivity {
                 R.string.drawer_close  /* "close drawer" description for accessibility */
         ) {
             public void onDrawerClosed(View drawerView) {
-                getActionBar().setTitle(mTitle);
+                getActionBar().setTitle(mDrawerTitle);
                 invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
             }
 
@@ -154,7 +156,7 @@ public class MainActivity extends FragmentActivity {
     public boolean onPrepareOptionsMenu(Menu menu) {
         // If the nav drawer is open, hide action items related to the content view
         boolean drawerOpen = mDrawerLayout.isDrawerOpen(mDrawerList);
-        menu.findItem(R.id.action_websearch).setVisible(!drawerOpen);
+        menu.findItem(R.id.action_refresh).setVisible(!drawerOpen);
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -167,7 +169,7 @@ public class MainActivity extends FragmentActivity {
         }
         // Handle action buttons
         switch (item.getItemId()) {
-            case R.id.action_websearch:
+            case R.id.action_refresh:
                 // create intent to perform web search for this planet
                 Intent intent = new Intent(Intent.ACTION_WEB_SEARCH);
                 intent.putExtra(SearchManager.QUERY, getActionBar().getTitle());
@@ -197,6 +199,7 @@ public class MainActivity extends FragmentActivity {
         Bundle args = new Bundle();
         if (list.size() > position) {
             Series series = list.get(position);
+            mDrawerTitle = series.title;
             args.putInt(ImageGridFragment.ARG_PLANET_NUMBER, series.type);
             imageGridFragment.setArguments(args);
 
