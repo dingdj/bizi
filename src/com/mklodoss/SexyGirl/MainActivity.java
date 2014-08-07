@@ -1,8 +1,7 @@
 package com.mklodoss.SexyGirl;
 
-import android.app.SearchManager;
+import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.ActionBarDrawerToggle;
@@ -12,18 +11,21 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.*;
-import android.widget.*;
+import android.widget.AdapterView;
+import android.widget.BaseAdapter;
+import android.widget.ListView;
+import android.widget.TextView;
 import com.ddj.commonkit.DateUtil;
-import com.mklodoss.SexyGirl.setting.SettingPreference;
 import com.mklodoss.SexyGirl.displayingbitmaps.ui.ImageGridFragment;
 import com.mklodoss.SexyGirl.event.SeriesUpdatedEvent;
 import com.mklodoss.SexyGirl.model.Series;
-import com.mklodoss.SexyGirl.util.BelleHelper;
+import com.mklodoss.SexyGirl.setting.SettingPreference;
 import com.mklodoss.SexyGirl.util.SeriesHelper;
+import com.mklodoss.SexyGirl.util.Toaster;
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import de.greenrobot.event.EventBus;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -152,9 +154,9 @@ public class MainActivity extends FragmentActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-      MenuInflater inflater = getMenuInflater();
-      inflater.inflate(R.menu.main, menu);
-      return super.onCreateOptionsMenu(menu);
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main, menu);
+        return super.onCreateOptionsMenu(menu);
     }
 
     /* Called whenever we call invalidateOptionsMenu() */
@@ -177,14 +179,37 @@ public class MainActivity extends FragmentActivity {
         switch (item.getItemId()) {
             case R.id.action_refresh:
                 // 刷新
-                if(fragment != null) {
+                if (fragment != null) {
                     fragment.getBellListFromNetWork();
                 }
                 return true;
             case R.id.action_clear:
                 //清除缓存
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("删除缓存");
+                builder.setMessage("确定要删除缓存吗？");
+                builder.setNeutralButton("确定", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        new Thread() {
+                            @Override
+                            public void run() {
+                                ImageLoader.getInstance().clearDiskCache();
+                            }
+                        }.start();
+                        Toaster.show(MainActivity.this, "成功删除缓存");
+                    }
 
-                ImageLoader.getInstance().clearDiskCache();
+                });
+                builder.setNegativeButton("取消", new DialogInterface.OnClickListener(){
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+                builder.show();
+                return true;
+
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -269,18 +294,18 @@ public class MainActivity extends FragmentActivity {
             return rootView;
         }
     }*/
-
     @Override
-    public void onDestroy(){
+    public void onDestroy() {
         super.onDestroy();
         EventBus.getDefault().unregister(this);
     }
 
     /**
      * 有新的目录同步
+     *
      * @param paramSeriesUpdatedEvent
      */
-    public void onEventMainThread(SeriesUpdatedEvent paramSeriesUpdatedEvent){
+    public void onEventMainThread(SeriesUpdatedEvent paramSeriesUpdatedEvent) {
         Log.e("ddj", "---------------------onEventMainThread");
         list = SeriesHelper.getInstance().getSeriesList();
         adapter.setList(list);
@@ -291,9 +316,10 @@ public class MainActivity extends FragmentActivity {
 
     /**
      * drawopen
+     *
      * @return
      */
-    public boolean isDrawerOpen(){
+    public boolean isDrawerOpen() {
         return mDrawerLayout.isDrawerOpen(mDrawerList);
     }
 }

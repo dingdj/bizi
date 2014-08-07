@@ -406,6 +406,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     public void updateBellList() {
         android.util.Log.e("tttttttt", "onEventMainThread----------------------------");
         list = BelleHelper.getInstance().getLocalBelleList();
+        ImageLoader.getInstance().resume();
         adapterNotify(true);
     }
 
@@ -415,6 +416,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
      */
     public void getBellListFromNetWork() {
         if(!isMyCollect()) {
+            ImageLoader.getInstance().pause();
             BelleHelper.getInstance().getLocaleBellFromNetwork(this.getActivity(), category,
                     new BelleHelper.LocalBelleNotifyCallBack(
                             new WeakReference<ImageGridFragment>(this)));
