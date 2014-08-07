@@ -13,7 +13,7 @@ import android.util.Log;
 import android.view.*;
 import android.widget.*;
 import com.ddj.commonkit.DateUtil;
-import com.mklodoss.SexyGirl.Setting.SettingPreference;
+import com.mklodoss.SexyGirl.setting.SettingPreference;
 import com.mklodoss.SexyGirl.displayingbitmaps.ui.ImageGridFragment;
 import com.mklodoss.SexyGirl.event.SeriesUpdatedEvent;
 import com.mklodoss.SexyGirl.model.Series;
@@ -105,6 +105,7 @@ public class MainActivity extends FragmentActivity {
         }
         list = SeriesHelper.getInstance().getSeriesList();
         adapter.setList(list);
+        selectItem(SettingPreference.getInstance().getCurrentItem());
     }
 
     class DrawerAdapter extends BaseAdapter {
@@ -211,6 +212,8 @@ public class MainActivity extends FragmentActivity {
         }
         //setTitle(mPlanetTitles[position]);
         mDrawerLayout.closeDrawer(mDrawerList);
+        SettingPreference.getInstance().setCurrentItem(position);
+        getActionBar().setTitle(mDrawerTitle);
     }
 
     @Override
@@ -278,5 +281,7 @@ public class MainActivity extends FragmentActivity {
         list = SeriesHelper.getInstance().getSeriesList();
         adapter.setList(list);
         adapter.notifyDataSetChanged();
+        SettingPreference.getInstance().setCurrentItem(0);
+        selectItem(0);
     }
 }

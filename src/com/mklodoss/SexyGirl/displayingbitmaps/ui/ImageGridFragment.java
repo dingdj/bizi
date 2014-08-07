@@ -18,6 +18,7 @@ package com.mklodoss.SexyGirl.displayingbitmaps.ui;
 
 import android.annotation.TargetApi;
 import android.app.ActivityOptions;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -33,13 +34,17 @@ import com.mklodoss.SexyGirl.R;
 import com.mklodoss.SexyGirl.displayingbitmaps.util.Utils;
 import com.mklodoss.SexyGirl.event.SeriesUpdatedEvent;
 import com.mklodoss.SexyGirl.logger.Log;
+import com.mklodoss.SexyGirl.model.CollectedBelle;
 import com.mklodoss.SexyGirl.model.LocalBelle;
 import com.mklodoss.SexyGirl.util.BelleHelper;
+import com.mklodoss.SexyGirl.util.CollectHelper;
+import com.mklodoss.SexyGirl.util.Toaster;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 import de.greenrobot.event.EventBus;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -60,20 +65,21 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     //private ImageFetcher mImageFetcher;
     public static final String ARG_PLANET_NUMBER = "categoty";
     private int category;
-    public static List<LocalBelle> list = new ArrayList<LocalBelle>();
+    public volatile static List<LocalBelle> list = new ArrayList<LocalBelle>();
     GridView mGridView;
     LayoutInflater layoutInflater;
+    ProgressDialog progressDialog;
 
     /**
      * Empty constructor as per the Fragment documentation
      */
-    public ImageGridFragment() {}
+    public ImageGridFragment() {
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         layoutInflater = getLayoutInflater(savedInstanceState);
-        EventBus.getDefault().register(this);
         setHasOptionsMenu(false);
 
         mImageThumbSize = getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
@@ -87,13 +93,24 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 
         //获取分类数据
         category = getArguments().getInt(ARG_PLANET_NUMBER);
-        list = BelleHelper.getInstance().getLocaleBell(this.getActivity(), category);
+        if (category == -1) { //我的收藏
+            list.clear();
+            list.addAll(CollectHelper.getInstance().loadAll());
+        } else {
+            list.clear();
+            list.addAll(BelleHelper.getInstance().getLocaleBell(this.getActivity(), category,
+                    new BelleHelper.LocalBelleNotifyCallBack(
+                            new WeakReference<ImageGridFragment>(this))));
+        }
+        progressDialog = new ProgressDialog(this.getActivity());
+        progressDialog.setProgressStyle(0);
         adapterNotify(false);
     }
 
     @Override
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
 
         final View v = inflater.inflate(R.layout.image_grid_fragment, container, false);
         mGridView = (GridView) v.findViewById(R.id.gridView);
@@ -116,7 +133,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 
             @Override
             public void onScroll(AbsListView absListView, int firstVisibleItem,
-                    int visibleItemCount, int totalItemCount) {
+                                 int visibleItemCount, int totalItemCount) {
             }
         });
 
@@ -136,7 +153,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
                                 final int columnWidth =
                                         (mGridView.getWidth() / numColumns) - mImageThumbSpacing;
                                 mAdapter.setNumColumns(numColumns);
-                                mAdapter.setItemHeight((int)(columnWidth*1.46));
+                                mAdapter.setItemHeight((int) (columnWidth * 1.46));
                                 if (BuildConfig.DEBUG) {
                                     Log.d(TAG, "onCreateView - numColumns set to " + numColumns);
                                 }
@@ -169,7 +186,6 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     @Override
     public void onDestroy() {
         super.onDestroy();
-        EventBus.getDefault().unregister(this);
         ImageLoader.getInstance().stop();
     }
 
@@ -178,6 +194,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
         final Intent i = new Intent(getActivity(), ImageDetailActivity.class);
         i.putExtra(ImageDetailActivity.EXTRA_IMAGE, (int) id);
+        i.putExtra(ImageDetailActivity.EXTRA_CATEGORY, category);
         if (Utils.hasJellyBean()) {
             // makeThumbnailScaleUpAnimation() looks kind of ugly here as the loading spinner may
             // show plus the thumbnail image in GridView is cropped. so using
@@ -218,7 +235,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
         private int mNumColumns = 0;
         private int mActionBarHeight = 0;
         private GridView.LayoutParams mImageViewLayoutParams;
-//        public String[] urls = Images.imageThumbUrls;
+        //        public String[] urls = Images.imageThumbUrls;
         public String[] urls = new String[0];
 
         public ImageAdapter(Context context) {
@@ -293,15 +310,15 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
             final ProgressBar progressBar;
             if (convertView == null) { // if it's not recycled, instantiate and initialize
                 view = layoutInflater.inflate(R.layout.thumb_image_view, mGridView, false);
-                imageView = (RecyclingImageView)view.findViewById(R.id.photo);
+                imageView = (RecyclingImageView) view.findViewById(R.id.photo);
                 imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                progressBar = (ProgressBar)view.findViewById(R.id.progressBar);
+                progressBar = (ProgressBar) view.findViewById(R.id.progressBar);
                 ViewHolder holder = new ViewHolder(view);
                 view.setTag(holder);
                 view.setLayoutParams(mImageViewLayoutParams);
             } else { // Otherwise re-use the converted view
                 view = convertView;
-                ViewHolder holder = (ViewHolder)convertView.getTag();
+                ViewHolder holder = (ViewHolder) convertView.getTag();
                 imageView = holder.photo;
                 progressBar = holder.progressBar;
             }
@@ -375,37 +392,54 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
      * 更新adapter数据
      */
     private void adapterNotify(boolean notify) {
-        if(list != null && list.size() > 0) {
+        if (list != null && list.size() > 0) {
+            if(!isMyCollect()) {
+                progressDialog.dismiss();
+            }
             String[] urls = new String[list.size()];
-            for(int i=0; i<list.size(); i++) {
+            for (int i = 0; i < list.size(); i++) {
                 LocalBelle localBelle = list.get(i);
                 urls[i] = localBelle.getUrl();
             }
             mAdapter.urls = urls;
-            if(notify) {
+            if (notify) {
                 mAdapter.notifyDataSetChanged();
+            }
+        } else {
+            if (!isMyCollect()) {
+                progressDialog.show();
+            } else {
+                Toaster.show(getActivity(), R.string.has_no_collect);
             }
         }
     }
 
     /**
      * 有新的图片同步
-     * @param paramSeriesUpdatedEvent
      */
-    public void onEventMainThread(SeriesUpdatedEvent paramSeriesUpdatedEvent){
+    public void updateBellList() {
+        android.util.Log.e("tttttttt", "onEventMainThread----------------------------");
         list = BelleHelper.getInstance().getLocalBelleList();
         adapterNotify(true);
     }
 
-    private static final class ViewHolder
-    {
+    private static final class ViewHolder {
         public RecyclingImageView photo;
         public ProgressBar progressBar;
 
-        public ViewHolder(View paramView)
-        {
-            this.photo = ((RecyclingImageView)paramView.findViewById(R.id.photo));
-            this.progressBar = ((ProgressBar)paramView.findViewById(R.id.progressBar));
+        public ViewHolder(View paramView) {
+            this.photo = ((RecyclingImageView) paramView.findViewById(R.id.photo));
+            this.progressBar = ((ProgressBar) paramView.findViewById(R.id.progressBar));
         }
     }
+
+    /**
+     * 是否是我的收藏
+     *
+     * @return
+     */
+    public boolean isMyCollect() {
+        return -1 == category;
+    }
+
 }

@@ -3,41 +3,20 @@ package com.mklodoss.SexyGirl.model;
 /**
  * Created by Administrator on 2014/8/6.
  */
-public class CollectedBelle {
+public class CollectedBelle extends LocalBelle{
 
-    private long time;
-    private String url;
-
-    public CollectedBelle() {}
-
-    public CollectedBelle(String paramString)
+    public CollectedBelle(long paramLong1, long paramLong2, int paramInt, String paramString1, String paramString2, String paramString3)
     {
-        this.url = paramString;
+        super(paramLong1, paramLong2, paramInt, paramString1, paramString2, paramString3);
     }
 
-    public CollectedBelle(String paramString, long paramLong)
-    {
-        this.url = paramString;
-        this.time = paramLong;
+    public CollectedBelle(LocalBelle belle) {
+        this.id = belle.id;
+        this.desc = belle.desc;
+        this.rawUrl = belle.rawUrl;
+        this.time = belle.time;
+        this.type = belle.type;
+        this.url = belle.url;
     }
 
-    public long getTime()
-    {
-        return this.time;
-    }
-
-    public String getUrl()
-    {
-        return this.url;
-    }
-
-    public void setTime(long paramLong)
-    {
-        this.time = paramLong;
-    }
-
-    public void setUrl(String paramString)
-    {
-        this.url = paramString;
-    }
 }

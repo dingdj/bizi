@@ -563,14 +563,6 @@ public class ImageCache {
                         !isExternalStorageRemovable() ? getExternalCacheDir(context).getPath() :
                                 context.getCacheDir().getPath();
         android.util.Log.e(TAG, cachePath + File.separator + uniqueName);
-
-        try {
-            throw new IllegalAccessException("");
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-
-
         return new File(cachePath + File.separator + uniqueName);
     }
 

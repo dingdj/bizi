@@ -1,4 +1,4 @@
-package com.mklodoss.SexyGirl.Setting;
+package com.mklodoss.SexyGirl.setting;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -15,9 +15,14 @@ public class SettingPreference {
 
     private static final String KEY_LAUNCHER_ON_START_DAY_TIME = "launcher_on_start_day_time";
 
+    private static final String KEY_NAV_DRAWER_SELECT_ITEM = "key_nav_drawer_select_item";
+
+    private int currentItem;
+
 
     private SettingPreference() {
         sp = MainApplication._application.getApplicationContext().getSharedPreferences(NAME, Context.MODE_PRIVATE);
+        currentItem = sp.getInt(KEY_NAV_DRAWER_SELECT_ITEM, 0);
     }
 
     /**
@@ -48,4 +53,20 @@ public class SettingPreference {
         return sp.getLong(KEY_LAUNCHER_ON_START_DAY_TIME, 0);
     }
 
+    /**
+     * 获取当前Item
+     * @return
+     */
+    public int getCurrentItem() {
+        return currentItem;
+    }
+
+    /**
+     * 设置当前Item
+     * @param currentItem
+     */
+    public void setCurrentItem(int currentItem) {
+        this.currentItem = currentItem;
+        sp.edit().putInt(KEY_NAV_DRAWER_SELECT_ITEM, currentItem).commit();
+    }
 }

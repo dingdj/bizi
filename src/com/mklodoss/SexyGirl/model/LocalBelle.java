@@ -8,8 +8,8 @@ public class LocalBelle {
     public long time;
     public int type;
     public String url;
-    private String desc;
-    private String rawUrl;
+    public String desc;
+    public String rawUrl;
 
     public LocalBelle() {}
 
