@@ -207,21 +207,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
         }
     }
 
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-    }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        /*switch (item.getItemId()) {
-            case R.id.clear_cache:
-                mImageFetcher.clearCache();
-                Toast.makeText(getActivity(), R.string.clear_cache_complete_toast,
-                        Toast.LENGTH_SHORT).show();
-                return true;
-        }*/
-        return super.onOptionsItemSelected(item);
-    }
 
     /**
      * The main adapter that backs the GridView. This is fairly standard except the number of
@@ -421,6 +407,19 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
         android.util.Log.e("tttttttt", "onEventMainThread----------------------------");
         list = BelleHelper.getInstance().getLocalBelleList();
         adapterNotify(true);
+    }
+
+
+    /**
+     *强制从网络获取数据
+     */
+    public void getBellListFromNetWork() {
+        if(!isMyCollect()) {
+            BelleHelper.getInstance().getLocaleBellFromNetwork(this.getActivity(), category,
+                    new BelleHelper.LocalBelleNotifyCallBack(
+                            new WeakReference<ImageGridFragment>(this)));
+            progressDialog.show();
+        }
     }
 
     private static final class ViewHolder {

@@ -1,6 +1,7 @@
 package com.mklodoss.SexyGirl;
 
 import android.app.SearchManager;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
@@ -17,9 +18,12 @@ import com.mklodoss.SexyGirl.setting.SettingPreference;
 import com.mklodoss.SexyGirl.displayingbitmaps.ui.ImageGridFragment;
 import com.mklodoss.SexyGirl.event.SeriesUpdatedEvent;
 import com.mklodoss.SexyGirl.model.Series;
+import com.mklodoss.SexyGirl.util.BelleHelper;
 import com.mklodoss.SexyGirl.util.SeriesHelper;
+import com.nostra13.universalimageloader.core.ImageLoader;
 import de.greenrobot.event.EventBus;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,6 +39,7 @@ public class MainActivity extends FragmentActivity {
     private CharSequence mDrawerTitle;
     private CharSequence mTitle;
     List<Series> list = new ArrayList<Series>();
+    private ImageGridFragment fragment;
 
     /**
      * Called when the activity is first created.
@@ -147,9 +152,9 @@ public class MainActivity extends FragmentActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.main, menu);
-        return super.onCreateOptionsMenu(menu);
+      MenuInflater inflater = getMenuInflater();
+      inflater.inflate(R.menu.main, menu);
+      return super.onCreateOptionsMenu(menu);
     }
 
     /* Called whenever we call invalidateOptionsMenu() */
@@ -171,16 +176,15 @@ public class MainActivity extends FragmentActivity {
         // Handle action buttons
         switch (item.getItemId()) {
             case R.id.action_refresh:
-                // create intent to perform web search for this planet
-                Intent intent = new Intent(Intent.ACTION_WEB_SEARCH);
-                intent.putExtra(SearchManager.QUERY, getActionBar().getTitle());
-                // catch event that there's no activity to handle intent
-                if (intent.resolveActivity(getPackageManager()) != null) {
-                    startActivity(intent);
-                } else {
-                    Toast.makeText(this, R.string.app_not_available, Toast.LENGTH_LONG).show();
+                // 刷新
+                if(fragment != null) {
+                    fragment.getBellListFromNetWork();
                 }
                 return true;
+            case R.id.action_clear:
+                //清除缓存
+
+                ImageLoader.getInstance().clearDiskCache();
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -196,16 +200,16 @@ public class MainActivity extends FragmentActivity {
 
     private void selectItem(int position) {
         // update the main content by replacing fragments
-        ImageGridFragment imageGridFragment = new ImageGridFragment();
+        fragment = new ImageGridFragment();
         Bundle args = new Bundle();
         if (list.size() > position) {
             Series series = list.get(position);
             mDrawerTitle = series.title;
             args.putInt(ImageGridFragment.ARG_PLANET_NUMBER, series.type);
-            imageGridFragment.setArguments(args);
+            fragment.setArguments(args);
 
             final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-            ft.replace(R.id.content_frame, imageGridFragment);
+            ft.replace(R.id.content_frame, fragment);
             ft.commit();
             // update selected item and title, then close the drawer
             mDrawerList.setItemChecked(position, true);
@@ -283,5 +287,13 @@ public class MainActivity extends FragmentActivity {
         adapter.notifyDataSetChanged();
         SettingPreference.getInstance().setCurrentItem(0);
         selectItem(0);
+    }
+
+    /**
+     * drawopen
+     * @return
+     */
+    public boolean isDrawerOpen(){
+        return mDrawerLayout.isDrawerOpen(mDrawerList);
     }
 }

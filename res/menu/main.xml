@@ -20,7 +20,7 @@
     <item android:icon="@drawable/android_db_actionbar_more" android:id="@+id/detail_action_more"
           android:title="@string/action_more" android:showAsAction="always">
         <menu>
-            <item android:id="@id/action_settings" android:title="@string/action_settings"
+            <item android:id="@+id/action_clear" android:title="@string/setting_clear"
                   android:showAsAction="ifRoom"/>
         </menu>
     </item>
