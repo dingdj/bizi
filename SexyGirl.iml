@@ -3,6 +3,8 @@
   <component name="FacetManager">
     <facet type="android" name="Android">
       <configuration>
+        <option name="CUSTOM_DEBUG_KEYSTORE_PATH" value="file://D:/BaiduYunDownload/ddj.keystore" />
+        <option name="RUN_PROGUARD" value="true" />
         <option name="UPDATE_PROPERTY_FILES" value="true" />
       </configuration>
     </facet>

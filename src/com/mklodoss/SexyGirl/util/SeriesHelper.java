@@ -18,11 +18,11 @@ import org.json.JSONObject;
 import java.util.*;
 
 /**
- * Created by Administrator on 2014/8/6.
+ * Created by dingdj on 2014/8/6.
  */
 public class SeriesHelper {
     private static SeriesHelper mInstance ;
-    private List<Series> mSeriesList = new ArrayList();
+    private List<Series> mSeriesList = new ArrayList<Series>();
 
     private SeriesHelper(Context context) {
         final SeriesDao localSeriesDao = DaoUtils.getDaoSession(context).getSeriesDao();
@@ -37,16 +37,16 @@ public class SeriesHelper {
 
     private List<Series> defaultSeries()
     {
-        ArrayList localArrayList = new ArrayList();
-        localArrayList.add(new Series(1, "性感美女", null, null, Integer.valueOf(1)));
-        localArrayList.add(new Series(2, "岛国女友", null, null, Integer.valueOf(1)));
-        localArrayList.add(new Series(3, "丝袜美腿", null, null, Integer.valueOf(1)));
-        localArrayList.add(new Series(4, "有沟必火", null, null, Integer.valueOf(1)));
-        localArrayList.add(new Series(5, "有沟必火", null, null, Integer.valueOf(1)));
-        localArrayList.add(new Series(11, "明星美女", null, null, Integer.valueOf(1)));
-        localArrayList.add(new Series(12, "甜素纯", null, null, Integer.valueOf(1)));
-        localArrayList.add(new Series(13, "校花", null, null, Integer.valueOf(1)));
-        return localArrayList;
+        ArrayList<Series> list = new ArrayList<Series>();
+        list.add(new Series(1, "性感美女", null, null, 1));
+        list.add(new Series(2, "岛国女友", null, null, 1));
+        list.add(new Series(3, "丝袜美腿", null, null, 1));
+        list.add(new Series(4, "有沟必火", null, null, 1));
+        list.add(new Series(5, "有沟必火", null, null, 1));
+        list.add(new Series(11, "明星美女", null, null, 1));
+        list.add(new Series(12, "甜素纯", null, null, 1));
+        list.add(new Series(13, "校花", null, null, 1));
+        return list;
     }
 
     public static SeriesHelper getInstance()
@@ -59,11 +59,9 @@ public class SeriesHelper {
 
     private List<Series> localSeries()
     {
-        ArrayList localArrayList = new ArrayList();
-        localArrayList.add(new Series(-1, "我的收藏", "本地", null, Integer.valueOf(1)));
-        if ("com.michael.wallpaper".endsWith(AppRuntime.PACKAGE_NAME)) {
-            localArrayList.add(new Series(-2, "隐藏美女", "本地", null, Integer.valueOf(1)));
-        }
+        ArrayList<Series> localArrayList = new ArrayList<Series>();
+        localArrayList.add(new Series(-1, "我的收藏", "本地", null, 1));
+        localArrayList.add(new Series(-2, "隐藏美女", "本地", null, 1));
         return localArrayList;
     }
 
@@ -75,7 +73,7 @@ public class SeriesHelper {
     public void syncSeries(final Context paramContext)
     {
         final SeriesDao localSeriesDao = DaoUtils.getDaoSession(paramContext).getSeriesDao();
-        JsonCookieSupportRequest request = new JsonCookieSupportRequest(Request.Method.POST, Config.URL+"/series/list?appid=29560&mode=2", null,
+        JsonCookieSupportRequest request = new JsonCookieSupportRequest(Request.Method.POST, Config.getSeriesUrl(), null,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject jsonObject) {
@@ -90,7 +88,7 @@ public class SeriesHelper {
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError volleyError) {
-                Toast.makeText(MainApplication._application, "网络异常，请稍后重试", Toast.LENGTH_LONG);
+                Toast.makeText(MainApplication._application, "网络异常，请稍后重试", Toast.LENGTH_LONG).show();
                 Log.e("22", volleyError.toString());
             }
         });

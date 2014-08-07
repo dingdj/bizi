@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">SexyGirl</string>
+    <string name="app_name">美女大本营</string>
     <string name="drawer_open">Open navigation drawer</string>
     <string name="drawer_close">Close navigation drawer</string>
     <string name="action_refresh">刷新</string>
@@ -56,4 +56,5 @@
     <string name="tips_title">提示</string>
     <string name="title_setting">设置</string>
     <string name="has_no_collect">还没有收藏美女，快去收藏吧！</string>
+    <string name="need_long_time_to_unlock">需要使用更多的时间来解锁隐藏功能</string>
 </resources>

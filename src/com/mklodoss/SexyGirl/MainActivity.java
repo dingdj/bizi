@@ -1,5 +1,6 @@
 package com.mklodoss.SexyGirl;
 
+import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.res.Configuration;
@@ -22,7 +23,6 @@ import com.mklodoss.SexyGirl.model.Series;
 import com.mklodoss.SexyGirl.setting.SettingPreference;
 import com.mklodoss.SexyGirl.util.SeriesHelper;
 import com.mklodoss.SexyGirl.util.Toaster;
-import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import de.greenrobot.event.EventBus;
 
@@ -63,8 +63,11 @@ public class MainActivity extends FragmentActivity {
         mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
 
         // enable ActionBar app icon to behave as action to toggle nav drawer
-        getActionBar().setDisplayHomeAsUpEnabled(true);
-        getActionBar().setHomeButtonEnabled(true);
+        ActionBar actionBar = getActionBar();
+        if(actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setHomeButtonEnabled(true);
+        }
 
         // ActionBarDrawerToggle ties together the the proper interactions
         // between the sliding drawer and the action bar app icon
@@ -225,11 +228,16 @@ public class MainActivity extends FragmentActivity {
 
     private void selectItem(int position) {
         // update the main content by replacing fragments
+
         fragment = new ImageGridFragment();
         Bundle args = new Bundle();
         if (list.size() > position) {
             Series series = list.get(position);
             mDrawerTitle = series.title;
+            if(ImageGridFragment.isHideCategory(series.type)){
+                Toaster.show(this, R.string.action_cancel_collect);
+                return;
+            }
             args.putInt(ImageGridFragment.ARG_PLANET_NUMBER, series.type);
             fragment.setArguments(args);
 
@@ -239,16 +247,19 @@ public class MainActivity extends FragmentActivity {
             // update selected item and title, then close the drawer
             mDrawerList.setItemChecked(position, true);
         }
-        //setTitle(mPlanetTitles[position]);
         mDrawerLayout.closeDrawer(mDrawerList);
         SettingPreference.getInstance().setCurrentItem(position);
-        getActionBar().setTitle(mDrawerTitle);
+        if(getActionBar() != null) {
+            getActionBar().setTitle(mDrawerTitle);
+        }
     }
 
     @Override
     public void setTitle(CharSequence title) {
         mTitle = title;
-        getActionBar().setTitle(mTitle);
+        if(getActionBar() != null) {
+            getActionBar().setTitle(mTitle);
+        }
     }
 
     /**
@@ -270,30 +281,6 @@ public class MainActivity extends FragmentActivity {
         mDrawerToggle.onConfigurationChanged(newConfig);
     }
 
-    /**
-     * Fragment that appears in the "content_frame", shows a planet
-     */
-   /* public static class PlanetFragment extends Fragment {
-        public static final String ARG_PLANET_NUMBER = "planet_number";
-
-        public PlanetFragment() {
-            // Empty constructor required for fragment subclasses
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_planet, container, false);
-            int i = getArguments().getInt(ARG_PLANET_NUMBER);
-            String planet = getResources().getStringArray(R.array.planets_array)[i];
-
-            int imageId = getResources().getIdentifier(planet.toLowerCase(Locale.getDefault()),
-                    "drawable", getActivity().getPackageName());
-            ((ImageView) rootView.findViewById(R.id.image)).setImageResource(imageId);
-            getActivity().setTitle(planet);
-            return rootView;
-        }
-    }*/
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -314,12 +301,4 @@ public class MainActivity extends FragmentActivity {
         selectItem(0);
     }
 
-    /**
-     * drawopen
-     *
-     * @return
-     */
-    public boolean isDrawerOpen() {
-        return mDrawerLayout.isDrawerOpen(mDrawerList);
-    }
 }

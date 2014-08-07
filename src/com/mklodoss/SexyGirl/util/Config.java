@@ -2,6 +2,7 @@ package com.mklodoss.SexyGirl.util;
 
 import com.mklodoss.SexyGirl.model.LocalBelle;
 import com.mklodoss.SexyGirl.model.Series;
+import com.mklodoss.SexyGirl.setting.SettingPreference;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -14,14 +15,20 @@ import java.util.List;
  */
 public class Config {
 
-    public static final String IMAGE_CACHE_DIR = "thumbs";
     public static final String URL = "http://mmpicture.duapp.com";
-    public static final int APPID = 29560;
-    public static final int MODE = 2;
-    public static final String App_Id = "appid";
-    public static final String Mode = "mode";
-    public static final String FETCH_IMAGE_URL = URL + "/belle/random?appid=29560&count=50&type=";
+    public static final int appId = 29560;
+    public static final String FETCH_IMAGE_URL = URL + "/belle/random?appid=" + appId + "&count=50&type=";
 
+
+    /**
+     * 获取分类URL
+     *
+     * @return
+     */
+    public static String getSeriesUrl() {
+        int mode = SettingPreference.getInstance().getMode();
+        return URL + "/series/list?appid=" + appId + "&mode=" + mode;
+    }
 
     /**
      * 转换
@@ -32,7 +39,7 @@ public class Config {
         List<Series> list = new ArrayList<Series>();
         try {
             JSONArray array = jsonObject.getJSONArray("seriesList");
-            for (int i=0; i<array.length(); i++) {
+            for (int i = 0; i < array.length(); i++) {
                 JSONObject object = array.getJSONObject(i);
                 Series series = new Series();
                 series.type = object.getInt("type");
@@ -49,6 +56,7 @@ public class Config {
 
     /**
      * 转换
+     *
      * @param jsonObject
      * @return
      */
@@ -56,7 +64,7 @@ public class Config {
         List<LocalBelle> list = new ArrayList<LocalBelle>();
         try {
             JSONArray array = jsonObject.getJSONArray("belles");
-            for (int i=0; i<array.length(); i++) {
+            for (int i = 0; i < array.length(); i++) {
                 JSONObject object = array.getJSONObject(i);
                 LocalBelle localBelle = new LocalBelle();
                 localBelle.id = object.getInt("id");

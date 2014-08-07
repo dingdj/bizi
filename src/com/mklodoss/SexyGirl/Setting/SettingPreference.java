@@ -17,16 +17,20 @@ public class SettingPreference {
 
     private static final String KEY_NAV_DRAWER_SELECT_ITEM = "key_nav_drawer_select_item";
 
+    private static final String KEY_MODE = "key_mode";
+
     private int currentItem;
 
+    private int mode;
 
     private SettingPreference() {
         sp = MainApplication._application.getApplicationContext().getSharedPreferences(NAME, Context.MODE_PRIVATE);
         currentItem = sp.getInt(KEY_NAV_DRAWER_SELECT_ITEM, 0);
+        mode = sp.getInt(KEY_MODE, 2);
     }
 
     /**
-     * @return
+     * @return void
      */
     public static SettingPreference getInstance() {
         if(settings == null) {
@@ -55,7 +59,7 @@ public class SettingPreference {
 
     /**
      * 获取当前Item
-     * @return
+     * @return int
      */
     public int getCurrentItem() {
         return currentItem;
@@ -69,4 +73,15 @@ public class SettingPreference {
         this.currentItem = currentItem;
         sp.edit().putInt(KEY_NAV_DRAWER_SELECT_ITEM, currentItem).commit();
     }
+
+    public int getMode() {
+        return mode;
+    }
+
+    public void setMode(int mode) {
+        this.mode = mode;
+        sp.edit().putInt(KEY_MODE, mode).commit();
+    }
+
+
 }

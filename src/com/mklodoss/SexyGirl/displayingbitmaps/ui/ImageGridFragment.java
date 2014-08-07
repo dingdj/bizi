@@ -111,7 +111,6 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-
         final View v = inflater.inflate(R.layout.image_grid_fragment, container, false);
         mGridView = (GridView) v.findViewById(R.id.gridView);
         mGridView.setAdapter(mAdapter);
@@ -379,22 +378,24 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
      */
     private void adapterNotify(boolean notify) {
         if (list != null && list.size() > 0) {
-            if(!isMyCollect()) {
+            if(isOtherCollect()) {
                 progressDialog.dismiss();
             }
-            String[] urls = new String[list.size()];
-            for (int i = 0; i < list.size(); i++) {
-                LocalBelle localBelle = list.get(i);
-                urls[i] = localBelle.getUrl();
-            }
-            mAdapter.urls = urls;
-            if (notify) {
-                mAdapter.notifyDataSetChanged();
+            if(!isHideCategory(category)) {
+                String[] urls = new String[list.size()];
+                for (int i = 0; i < list.size(); i++) {
+                    LocalBelle localBelle = list.get(i);
+                    urls[i] = localBelle.getUrl();
+                }
+                mAdapter.urls = urls;
+                if (notify) {
+                    mAdapter.notifyDataSetChanged();
+                }
             }
         } else {
-            if (!isMyCollect()) {
+            if (isOtherCollect()) {
                 progressDialog.show();
-            } else {
+            } else if(isMyCollect()){
                 Toaster.show(getActivity(), R.string.has_no_collect);
             }
         }
@@ -415,7 +416,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
      *强制从网络获取数据
      */
     public void getBellListFromNetWork() {
-        if(!isMyCollect()) {
+        if(isOtherCollect()) {
             ImageLoader.getInstance().pause();
             BelleHelper.getInstance().getLocaleBellFromNetwork(this.getActivity(), category,
                     new BelleHelper.LocalBelleNotifyCallBack(
@@ -437,10 +438,27 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     /**
      * 是否是我的收藏
      *
-     * @return
+     * @return boolean
      */
     public boolean isMyCollect() {
         return -1 == category;
+    }
+
+
+    /**
+     * 是否是隐藏应用
+     * @return
+     */
+    public static boolean isHideCategory(int category) {
+        return -2 == category;
+    }
+
+    /**
+     * 是否是其它应用
+     * @return
+     */
+    public boolean isOtherCollect() {
+        return category > 0;
     }
 
 }
